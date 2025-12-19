@@ -1,0 +1,104 @@
+.form{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-field-wrapper{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.field{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.label{
+    font-size: 1rem;
+    font-weight: 500;
+    color: #1a1a1a;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid #e0e6ef;
+  border-radius: 40px;
+  outline: none;
+  background: #f8fafc;
+  transition: 0.2s;
+}
+
+.input:focus {
+    border-color: #b7c4d4;
+    background: #fff;
+}
+
+/* REMOVE NUMBER INPUT SPINNERS */
+
+/* Chrome, Edge, Safari */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+
+.radios{
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.radioItem{
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+}
+
+input[type="radio" i] {
+    background-color: initial;
+    cursor: default;
+    appearance: auto;
+    box-sizing: border-box;
+    margin: 0 !important;
+    padding: initial;
+    border: initial;
+}
+
+.uploadBox {
+  background: #f8fafc;
+  border: 1px solid #e0e6ef;
+  padding: 0.75rem 1.25rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  color: #1a1a1a;
+}
+
+.fileHint {
+  margin: 0.625rem 0 0;
+  font-size: 0.75rem;
+  color: #1a1a1a;
+}
+.fileHint span { color:#1a1a1a; }
+
+.error {
+  background: rgba(255,60,60,0.12);
+  border: 1px solid rgba(255,60,60,0.25);
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  color: rgba(255,200,200,0.95);
+}
