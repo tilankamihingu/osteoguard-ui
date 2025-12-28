@@ -1,52 +1,45 @@
-import React from 'react';
-import { useEffect, useState } from "react";
+import React, { useState } from "react";
 import "./ResultPreview.css";
 
 export default function ResultPreview({ submitted }) {
-    const [previewUrl, setPreviewUrl] = useState("");
-    const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
-    useEffect(() => {
-        if (!submitted?.xrayFile) {
-        setPreviewUrl("");
-        return;
-        }
-        const url = URL.createObjectURL(submitted.xrayFile);
-        setPreviewUrl(url);
-        return () => URL.revokeObjectURL(url);
-    }, [submitted]);
+  if (!submitted) {
+    return (
+      <div className="emptyState">
+        <h3>No result yet</h3>
+        <p>
+          Fill the form and click <b>Submit</b> to preview results here.
+        </p>
+      </div>
+    );
+  }
 
-    if (!submitted) {
-        return (
-        <div className="emptyState">
-            <h3>No result yet</h3>
-            <p>Fill the form and click <b>Submit</b> to preview results here.</p>
-        </div>
-        );
-    }
+  // Read values safely from submitted payload
+  const genderLabel = submitted["M/F_M"] === 1 ? "Male" : "Female";
+
   return (
     <div className="preview">
       <div className="previewTop">
         <div>
-          <h3 className="name">{submitted.fullName}</h3>
+          <h3 className="name">Input Summary</h3>
           <p className="meta">
-            Age: {submitted.age} • Sex: {submitted.sex} • BMD: {submitted.bmd}
+            Age: {submitted.Age} • Gender: {genderLabel} • MMSE: {submitted.MMSE}
           </p>
         </div>
+
         <button className="btnSmall" onClick={() => setShowModal(true)}>
           View Full Result
         </button>
       </div>
 
+      {/* Submitted JSON Preview */}
       <div className="card">
-        <p className="cardTitle">X-ray Preview</p>
-        {previewUrl ? (
-          <img className="xray" src={previewUrl} alt="X-ray preview" />
-        ) : (
-          <p className="muted">No image preview</p>
-        )}
+        <p className="cardTitle">Submitted Input (JSON)</p>
+        <pre className="jsonBox">{JSON.stringify(submitted, null, 2)}</pre>
       </div>
 
+      {/* Prediction placeholder */}
       <div className="card">
         <p className="cardTitle">Prediction (placeholder)</p>
         <p className="muted">
@@ -66,30 +59,48 @@ export default function ResultPreview({ submitted }) {
             </div>
 
             <div className="modalBody">
+              {/* Inputs breakdown */}
               <div className="card">
-                <p className="cardTitle">Patient Details</p>
+                <p className="cardTitle">Clinical Inputs</p>
                 <ul className="list">
-                  <li><b>Name:</b> {submitted.fullName}</li>
-                  <li><b>Age:</b> {submitted.age}</li>
-                  <li><b>Weight:</b> {submitted.weight} kg</li>
-                  <li><b>Height:</b> {submitted.height} cm</li>
-                  <li><b>Sex:</b> {submitted.sex}</li>
-                  <li><b>Fracture:</b> {submitted.fracture}</li>
-                  <li><b>Medication:</b> {submitted.medication || "-"}</li>
-                  <li><b>Waiting Time:</b> {submitted.waitingTime || "-"} </li>
-                  <li><b>BMD:</b> {submitted.bmd}</li>
+                  <li>
+                    <b>Gender:</b> {genderLabel} ({submitted["M/F_M"]})
+                  </li>
+                  <li>
+                    <b>Age:</b> {submitted.Age}
+                  </li>
+                  <li>
+                    <b>Years of Education (Educ):</b> {submitted.Educ}
+                  </li>
+                  <li>
+                    <b>SES:</b> {submitted.SES}
+                  </li>
+                  <li>
+                    <b>MMSE:</b> {submitted.MMSE}
+                  </li>
+                  <li>
+                    <b>eTIV:</b> {submitted.eTIV}
+                  </li>
+                  <li>
+                    <b>nWBV:</b> {submitted.nWBV}
+                  </li>
+                  <li>
+                    <b>ASF:</b> {submitted.ASF}
+                  </li>
                 </ul>
               </div>
 
+              {/* Full JSON */}
               <div className="card">
-                <p className="cardTitle">X-ray</p>
-                {previewUrl && <img className="xray" src={previewUrl} alt="X-ray" />}
+                <p className="cardTitle">Full JSON Sent to API</p>
+                <pre className="jsonBox">{JSON.stringify(submitted, null, 2)}</pre>
               </div>
 
+              {/* Prediction placeholder */}
               <div className="card">
                 <p className="cardTitle">Prediction Result (placeholder)</p>
                 <p className="muted">
-                  We will show: Osteoporosis / Osteopenia / Normal + confidence.
+                  We will show: Alzheimer stage/class + confidence.
                 </p>
               </div>
             </div>
@@ -101,5 +112,5 @@ export default function ResultPreview({ submitted }) {
         </div>
       )}
     </div>
-  )
+  );
 }
