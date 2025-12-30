@@ -132,3 +132,18 @@ input[type="radio" i] {
     background-color: #5267ff;
     color: #ffffff;
 }
+
+.imgPreviewWrap{
+  margin-top: 10px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(0,0,0,0.03);
+}
+
+.imgPreview{
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+  display: block;
+}

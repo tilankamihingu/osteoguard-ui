@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./ClinicalForm.css";
 
 const initialState = {
-  gender: "Male", // UI only
+  gender: "Male",
   age: "",
   educ: "",
   ses: "1",
@@ -16,6 +16,11 @@ export default function ClinicalForm({ onSubmitFinal }) {
   const [form, setForm] = useState(initialState);
   const [error, setError] = useState("");
 
+  const [imageFile, setImageFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
+
   // Submit enabled only when required fields are present
   const canSubmit = useMemo(() => {
     return (
@@ -25,35 +30,36 @@ export default function ClinicalForm({ onSubmitFinal }) {
       form.mmse !== "" &&
       form.eTIV !== "" &&
       form.nWBV !== "" &&
-      form.asf !== ""
+      form.asf !== "" &&
+      !!imageFile
     );
-  }, [form]);
+  }, [form, imageFile]);
 
   function update(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
 
     if (!canSubmit) {
-      setError("Please fill all required fields.");
+      setError("Please fill all required fields and upload an MRI image.");
       return;
     }
 
-    // Basic validation
     const mmseNum = Number(form.mmse);
     if (Number.isNaN(mmseNum) || mmseNum < 0 || mmseNum > 30) {
-      setError("MMSE must be a number between 0 and 30.");
+      setError("MMSE must be between 0 and 30.");
       return;
     }
 
     setError("");
+    setLoading(true);
 
-    // Build payload EXACTLY as backend expects
-    const payload = {
+    // Build payload exactly as backend expects
+    const clinicalPayload = {
       Age: parseInt(form.age, 10),
-      Educ: parseInt(form.educ, 10),
+      EDUC: parseInt(form.educ, 10),
       SES: parseInt(form.ses, 10),
       MMSE: parseInt(form.mmse, 10),
       eTIV: parseInt(form.eTIV, 10),
@@ -62,14 +68,54 @@ export default function ClinicalForm({ onSubmitFinal }) {
       "M/F_M": form.gender === "Male" ? 1 : 0,
     };
 
-    onSubmitFinal(payload);
+    try {
+      const formData = new FormData();
+      formData.append("image", imageFile); // backend expects this key
+      formData.append("clinical", JSON.stringify(clinicalPayload)); // backend expects JSON string
+
+      const response = await fetch("http://127.0.0.1:5001/predict/fusion", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Fusion request failed");
+      }
+
+      const result = await response.json();
+
+      onSubmitFinal({
+        input: clinicalPayload,
+        result,
+      });
+    } catch (err) {
+      setError(err?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleCancel() {
     setForm(initialState);
+    setImageFile(null);
     setError("");
-    onSubmitFinal(null); // clear preview
+    setLoading(false);
+    onSubmitFinal(null); // ✅ clear preview
   }
+
+  useEffect(() => {
+  if (!imageFile) {
+    setImagePreviewUrl("");
+    return;
+  }
+
+  const url = URL.createObjectURL(imageFile);
+  setImagePreviewUrl(url);
+
+  return () => URL.revokeObjectURL(url);
+}, [imageFile]);
+
 
   return (
     <form className="form" onSubmit={handleSubmit}>
@@ -188,6 +234,33 @@ export default function ClinicalForm({ onSubmitFinal }) {
         </div>
       </div>
 
+      {/* MRI Upload */}
+      <div className="form-field-wrapper">
+        <div className="field">
+          <label className="label">MRI Image *</label>
+          <div className="uploadBox">
+            <input
+              type="file"
+              accept="image/png,image/jpeg"
+              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+            />
+
+            {imageFile && (
+              <p className="fileHint">
+                Selected: <span>{imageFile.name}</span>
+              </p>
+            )}
+
+            {imagePreviewUrl && (
+              <div className="imgPreviewWrap">
+                <img className="imgPreview" src={imagePreviewUrl} alt="MRI preview" />
+              </div>
+            )}
+          </div>
+
+        </div>
+      </div>
+
       {/* Error */}
       {error && (
         <div className="form-field-wrapper">
@@ -197,12 +270,12 @@ export default function ClinicalForm({ onSubmitFinal }) {
 
       {/* Actions */}
       <div className="actions">
-        <button type="button" className="btn btnGhost" onClick={handleCancel}>
+        <button type="button" className="btn btnGhost" onClick={handleCancel} disabled={loading}>
           Cancel
         </button>
 
-        <button type="submit" className="btn btnPrimary" disabled={!canSubmit}>
-          Submit
+        <button type="submit" className="btn btnPrimary" disabled={!canSubmit || loading}>
+          {loading ? "Submitting..." : "Submit"}
         </button>
       </div>
 
